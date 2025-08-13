@@ -1,0 +1,565 @@
+import React, { useState, useEffect } from "react";
+import { Search, ShoppingCart, User, Heart, Menu, X, Star, Truck, CreditCard, Shield, RefreshCw } from "lucide-react";
+
+const App = () => {
+  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [cart, setCart] = useState([]);
+  const [showCart, setShowCart] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
+
+  // Mock product data
+  const products = [
+    {
+      id: 1,
+      name: "Organic Apples",
+      price: 2.99,
+      originalPrice: 3.99,
+      category: "fruits",
+      image: "https://placehold.co/300x300/FF6B6B/FFFFFF?text=Apples",
+      rating: 4.8,
+      reviews: 124,
+      unit: "1 kg",
+      inStock: true
+    },
+    {
+      id: 2,
+      name: "Fresh Milk",
+      price: 1.49,
+      originalPrice: 1.99,
+      category: "dairy",
+      image: "https://placehold.co/300x300/4ECDC4/FFFFFF?text=Milk",
+      rating: 4.6,
+      reviews: 89,
+      unit: "1 L",
+      inStock: true
+    },
+    {
+      id: 3,
+      name: "Brown Bread",
+      price: 2.29,
+      originalPrice: 2.99,
+      category: "bakery",
+      image: "https://placehold.co/300x300/FFD93D/FFFFFF?text=Bread",
+      rating: 4.4,
+      reviews: 156,
+      unit: "400g",
+      inStock: true
+    },
+    {
+      id: 4,
+      name: "Free Range Eggs",
+      price: 3.99,
+      originalPrice: 4.99,
+      category: "dairy",
+      image: "https://placehold.co/300x300/FF8C42/FFFFFF?text=Eggs",
+      rating: 4.7,
+      reviews: 203,
+      unit: "12 pcs",
+      inStock: true
+    },
+    {
+      id: 5,
+      name: "Bananas",
+      price: 1.29,
+      originalPrice: 1.79,
+      category: "fruits",
+      image: "https://placehold.co/300x300/F7DC6F/FFFFFF?text=Bananas",
+      rating: 4.5,
+      reviews: 98,
+      unit: "1 kg",
+      inStock: true
+    },
+    {
+      id: 6,
+      name: "Tomatoes",
+      price: 1.99,
+      originalPrice: 2.49,
+      category: "vegetables",
+      image: "https://placehold.co/300x300/E74C3C/FFFFFF?text=Tomatoes",
+      rating: 4.3,
+      reviews: 142,
+      unit: "1 kg",
+      inStock: true
+    },
+    {
+      id: 7,
+      name: "Chicken Breast",
+      price: 8.99,
+      originalPrice: 10.99,
+      category: "meat",
+      image: "https://placehold.co/300x300/F1948A/FFFFFF?text=Chicken",
+      rating: 4.6,
+      reviews: 76,
+      unit: "500g",
+      inStock: true
+    },
+    {
+      id: 8,
+      name: "Basmati Rice",
+      price: 4.49,
+      originalPrice: 5.99,
+      category: "grains",
+      image: "https://placehold.co/300x300/D7BDE2/FFFFFF?text=Rice",
+      rating: 4.7,
+      reviews: 189,
+      unit: "5 kg",
+      inStock: true
+    },
+    {
+      id: 9,
+      name: "Olive Oil",
+      price: 12.99,
+      originalPrice: 15.99,
+      category: "cooking",
+      image: "https://placehold.co/300x300/82E0AA/FFFFFF?text=Oil",
+      rating: 4.8,
+      reviews: 134,
+      unit: "1 L",
+      inStock: true
+    },
+    {
+      id: 10,
+      name: "Yogurt",
+      price: 1.79,
+      originalPrice: 2.29,
+      category: "dairy",
+      image: "https://placehold.co/300x300/5DADE2/FFFFFF?text=Yogurt",
+      rating: 4.5,
+      reviews: 112,
+      unit: "500g",
+      inStock: true
+    },
+    {
+      id: 11,
+      name: "Carrots",
+      price: 1.49,
+      originalPrice: 1.99,
+      category: "vegetables",
+      image: "https://placehold.co/300x300xED7D31/FFFFFF?text=Carrots",
+      rating: 4.4,
+      reviews: 87,
+      unit: "1 kg",
+      inStock: true
+    },
+    {
+      id: 12,
+      name: "Salmon Fillet",
+      price: 15.99,
+      originalPrice: 19.99,
+      category: "meat",
+      image: "https://placehold.co/300x300/F5B7B1/FFFFFF?text=Salmon",
+      rating: 4.9,
+      reviews: 67,
+      unit: "500g",
+      inStock: true
+    }
+  ];
+
+  const categories = [
+    { id: 'all', name: 'All Products', icon: '🏪' },
+    { id: 'fruits', name: 'Fruits', icon: '🍎' },
+    { id: 'vegetables', name: 'Vegetables', icon: '🥕' },
+    { id: 'dairy', name: 'Dairy', icon: '🥛' },
+    { id: 'bakery', name: 'Bakery', icon: '🍞' },
+    { id: 'meat', name: 'Meat & Seafood', icon: '🥩' },
+    { id: 'grains', name: 'Grains', icon: '🌾' },
+    { id: 'cooking', name: 'Cooking Essentials', icon: '🍳' }
+  ];
+
+  const filteredProducts = products.filter(product => {
+    const matchesCategory = selectedCategory === 'all' || product.category === selectedCategory;
+    const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesCategory && matchesSearch;
+  });
+
+  const addToCart = (product) => {
+    setCart(prevCart => {
+      const existingItem = prevCart.find(item => item.id === product.id);
+      if (existingItem) {
+        return prevCart.map(item =>
+          item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item
+        );
+      }
+      return [...prevCart, { ...product, quantity: 1 }];
+    });
+  };
+
+  const removeFromCart = (productId) => {
+    setCart(prevCart => prevCart.filter(item => item.id !== productId));
+  };
+
+  const updateQuantity = (productId, newQuantity) => {
+    if (newQuantity === 0) {
+      removeFromCart(productId);
+      return;
+    }
+    setCart(prevCart =>
+      prevCart.map(item =>
+        item.id === productId ? { ...item, quantity: newQuantity } : item
+      )
+    );
+  };
+
+  const getTotalPrice = () => {
+    return cart.reduce((total, item) => total + (item.price * item.quantity), 0);
+  };
+
+  const getTotalItems = () => {
+    return cart.reduce((total, item) => total + item.quantity, 0);
+  };
+
+  const StarRating = ({ rating }) => {
+    return (
+      <div className="flex items-center space-x-1">
+        {[1, 2, 3, 4, 5].map((star) => (
+          <Star
+            key={star}
+            size={16}
+            className={star <= rating ? "fill-yellow-400 text-yellow-400" : "text-gray-300"}
+          />
+        ))}
+        <span className="text-sm text-gray-600 ml-1">({rating})</span>
+      </div>
+    );
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <header className="bg-white shadow-lg sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            {/* Logo */}
+            <div className="flex items-center">
+              <h1 className="text-2xl font-bold text-green-600">FreshBasket</h1>
+            </div>
+
+            {/* Search Bar */}
+            <div className="flex-1 max-w-lg mx-8">
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="Search for products..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                />
+                <Search className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
+              </div>
+            </div>
+
+            {/* Right Side Icons */}
+            <div className="flex items-center space-x-4">
+              <button className="p-2 text-gray-600 hover:text-green-600 transition-colors">
+                <Heart size={20} />
+              </button>
+              <button 
+                onClick={() => setShowCart(true)}
+                className="p-2 text-gray-600 hover:text-green-600 transition-colors relative"
+              >
+                <ShoppingCart size={20} />
+                {getTotalItems() > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-green-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                    {getTotalItems()}
+                  </span>
+                )}
+              </button>
+              <button className="p-2 text-gray-600 hover:text-green-600 transition-colors">
+                <User size={20} />
+              </button>
+            </div>
+
+            {/* Mobile Menu Button */}
+            <button 
+              className="md:hidden p-2 text-gray-600"
+              onClick={() => setShowMobileMenu(!showMobileMenu)}
+            >
+              {showMobileMenu ? <X size={24} /> : <Menu size={24} />}
+            </button>
+          </div>
+
+          {/* Mobile Menu */}
+          {showMobileMenu && (
+            <div className="md:hidden bg-white border-t border-gray-200">
+              <div className="px-4 py-2">
+                <input
+                  type="text"
+                  placeholder="Search for products..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                />
+              </div>
+              <div className="flex space-x-4 p-4">
+                <button className="flex-1 bg-green-600 text-white py-2 rounded-lg">Login</button>
+                <button className="flex-1 border border-green-600 text-green-600 py-2 rounded-lg">Sign Up</button>
+              </div>
+            </div>
+          )}
+        </div>
+      </header>
+
+      {/* Hero Section */}
+      <section className="bg-gradient-to-r from-green-500 to-green-600 text-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+          <div className="text-center">
+            <h2 className="text-4xl md:text-5xl font-bold mb-4">Fresh Produce Delivered to Your Door</h2>
+            <p className="text-xl mb-8">Get the freshest fruits, vegetables, and groceries with same-day delivery</p>
+            <button className="bg-white text-green-600 px-8 py-3 rounded-lg font-semibold text-lg hover:bg-gray-100 transition-colors">
+              Shop Now
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {/* Category Navigation */}
+      <nav className="bg-white shadow-sm sticky top-16 z-40">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex space-x-8 overflow-x-auto py-4">
+            {categories.map((category) => (
+              <button
+                key={category.id}
+                onClick={() => setSelectedCategory(category.id)}
+                className={`flex items-center space-x-2 whitespace-nowrap px-3 py-2 rounded-lg font-medium transition-colors ${
+                  selectedCategory === category.id
+                    ? 'bg-green-100 text-green-700'
+                    : 'text-gray-600 hover:text-green-600'
+                }`}
+              >
+                <span>{category.icon}</span>
+                <span>{category.name}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      </nav>
+
+      {/* Main Content */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Category Title */}
+        <div className="mb-8">
+          <h3 className="text-2xl font-bold text-gray-900">
+            {selectedCategory === 'all' ? 'All Products' : categories.find(c => c.id === selectedCategory)?.name}
+          </h3>
+          <p className="text-gray-600 mt-1">
+            {filteredProducts.length} products found
+          </p>
+        </div>
+
+        {/* Products Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {filteredProducts.map((product) => (
+            <div key={product.id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
+              <div className="relative">
+                <img
+                  src={product.image}
+                  alt={product.name}
+                  className="w-full h-48 object-cover"
+                />
+                {product.originalPrice > product.price && (
+                  <div className="absolute top-2 right-2 bg-red-500 text-white px-2 py-1 rounded text-xs font-bold">
+                    {Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)}% OFF
+                  </div>
+                )}
+              </div>
+              <div className="p-4">
+                <h4 className="font-semibold text-gray-900 mb-2">{product.name}</h4>
+                <p className="text-sm text-gray-500 mb-2">{product.unit}</p>
+                <StarRating rating={product.rating} />
+                <p className="text-xs text-gray-500 mt-1">{product.reviews} reviews</p>
+                
+                <div className="flex items-center justify-between mt-4">
+                  <div>
+                    <span className="font-bold text-lg text-green-600">${product.price}</span>
+                    {product.originalPrice > product.price && (
+                      <span className="text-sm text-gray-500 line-through ml-2">${product.originalPrice}</span>
+                    )}
+                  </div>
+                </div>
+                
+                <button
+                  onClick={() => addToCart(product)}
+                  disabled={!product.inStock}
+                  className={`w-full mt-4 py-2 px-4 rounded-lg font-medium transition-colors ${
+                    product.inStock
+                      ? 'bg-green-600 hover:bg-green-700 text-white'
+                      : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                  }`}
+                >
+                  {product.inStock ? 'Add to Cart' : 'Out of Stock'}
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {filteredProducts.length === 0 && (
+          <div className="text-center py-12">
+            <p className="text-gray-500 text-lg">No products found matching your search.</p>
+          </div>
+        )}
+      </main>
+
+      {/* Features Section */}
+      <section className="bg-white py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+            <div className="text-center">
+              <Truck className="h-12 w-12 text-green-600 mx-auto mb-4" />
+              <h4 className="font-semibold text-lg mb-2">Free Delivery</h4>
+              <p className="text-gray-600">On orders over $50</p>
+            </div>
+            <div className="text-center">
+              <Shield className="h-12 w-12 text-green-600 mx-auto mb-4" />
+              <h4 className="font-semibold text-lg mb-2">Quality Guarantee</h4>
+              <p className="text-gray-600">Fresh and safe products</p>
+            </div>
+            <div className="text-center">
+              <RefreshCw className="h-12 w-12 text-green-600 mx-auto mb-4" />
+              <h4 className="font-semibold text-lg mb-2">Easy Returns</h4>
+              <p className="text-gray-600">30-day return policy</p>
+            </div>
+            <div className="text-center">
+              <CreditCard className="h-12 w-12 text-green-600 mx-auto mb-4" />
+              <h4 className="font-semibold text-lg mb-2">Secure Payment</h4>
+              <p className="text-gray-600">100% secure checkout</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="bg-gray-900 text-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+            <div>
+              <h5 className="text-xl font-bold mb-4">FreshBasket</h5>
+              <p className="text-gray-400">Your trusted partner for fresh groceries and daily essentials delivered to your doorstep.</p>
+            </div>
+            <div>
+              <h5 className="font-semibold mb-4">Shop</h5>
+              <ul className="space-y-2 text-gray-400">
+                <li><a href="#" className="hover:text-white transition-colors">Fruits & Vegetables</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">Dairy Products</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">Bakery Items</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">Meat & Seafood</a></li>
+              </ul>
+            </div>
+            <div>
+              <h5 className="font-semibold mb-4">Support</h5>
+              <ul className="space-y-2 text-gray-400">
+                <li><a href="#" className="hover:text-white transition-colors">Help Center</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">Contact Us</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">Delivery Info</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">Returns</a></li>
+              </ul>
+            </div>
+            <div>
+              <h5 className="font-semibold mb-4">Connect</h5>
+              <ul className="space-y-2 text-gray-400">
+                <li><a href="#" className="hover:text-white transition-colors">Facebook</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">Instagram</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">Twitter</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">YouTube</a></li>
+              </ul>
+            </div>
+          </div>
+          <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
+            <p>&copy; 2024 FreshBasket. All rights reserved.</p>
+          </div>
+        </div>
+      </footer>
+
+      {/* Shopping Cart Sidebar */}
+      {showCart && (
+        <div className="fixed inset-0 z-50 overflow-hidden">
+          <div className="absolute inset-0 bg-black bg-opacity-50" onClick={() => setShowCart(false)}></div>
+          <div className="absolute right-0 top-0 h-full w-full max-w-md bg-white shadow-xl">
+            <div className="flex flex-col h-full">
+              {/* Cart Header */}
+              <div className="flex items-center justify-between p-4 border-b">
+                <h2 className="text-lg font-semibold">Shopping Cart ({getTotalItems()})</h2>
+                <button
+                  onClick={() => setShowCart(false)}
+                  className="p-2 text-gray-600 hover:text-gray-800"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              {/* Cart Items */}
+              <div className="flex-1 overflow-y-auto p-4">
+                {cart.length === 0 ? (
+                  <div className="text-center text-gray-500 mt-8">
+                    <ShoppingCart size={48} className="mx-auto mb-4 opacity-50" />
+                    <p>Your cart is empty</p>
+                    <button
+                      onClick={() => setShowCart(false)}
+                      className="mt-4 bg-green-600 text-white px-4 py-2 rounded-lg"
+                    >
+                      Continue Shopping
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {cart.map((item) => (
+                      <div key={item.id} className="flex items-center space-x-4 bg-gray-50 p-3 rounded-lg">
+                        <img
+                          src={item.image}
+                          alt={item.name}
+                          className="w-16 h-16 object-cover rounded"
+                        />
+                        <div className="flex-1">
+                          <h4 className="font-medium text-sm">{item.name}</h4>
+                          <p className="text-green-600 font-semibold">${item.price}</p>
+                          <div className="flex items-center space-x-2 mt-2">
+                            <button
+                              onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                              className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center hover:bg-gray-300"
+                            >
+                              -
+                            </button>
+                            <span className="font-medium">{item.quantity}</span>
+                            <button
+                              onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                              className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center hover:bg-gray-300"
+                            >
+                              +
+                            </button>
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => removeFromCart(item.id)}
+                          className="text-red-500 hover:text-red-700"
+                        >
+                          <X size={16} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Cart Footer */}
+              {cart.length > 0 && (
+                <div className="border-t p-4">
+                  <div className="flex justify-between items-center mb-4">
+                    <span className="font-semibold">Total:</span>
+                    <span className="text-2xl font-bold text-green-600">${getTotalPrice().toFixed(2)}</span>
+                  </div>
+                  <button className="w-full bg-green-600 text-white py-3 rounded-lg font-semibold hover:bg-green-700 transition-colors">
+                    Proceed to Checkout
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default App;
+```
